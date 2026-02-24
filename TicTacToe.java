@@ -628,6 +628,21 @@ public class TicTacToe {
 		return result;
 	}
 	
+	/*
+	 * This method returns a new set of coordinates using the given direction and starting coords.
+	 */
+	private static int[] rayIncrementer(int[] direction, int[] startingCoords, int amountOfIncrements) {
+		// Create a new set of coordinates
+		int[] newCoords = new int[dimensions];
+		arrayCopier(newCoords, startingCoords);
+		// Add the value of direction onto the coordinates
+		for (int i = 0; i < dimensions; i++) {
+			newCoords[i] += (direction[i] * amountOfIncrements);
+		}
+		// Return the new coordinates
+		return newCoords;
+	}
+	
 	// This object stores the x and y coordinates, and value, of a move
 	static class Move {
 		// Variables
@@ -653,7 +668,7 @@ public class TicTacToe {
 		}
 	}
 	
-	static class Space {
+	class Space {
 		// Variables
 		
 		/*
@@ -661,23 +676,20 @@ public class TicTacToe {
 		 * is to store an arbitrary amount of coordinates. If it were variables, there would be an upper
 		 * limit. The array is created when the boardCreator passes in the coordinates in array form
 		 */
-		public static int[] s_coordinates;
+		public int[] s_coordinates = new int[dimensions];
 		
 		// Identity is declaring if it is a X, O or empty, with X = 1, O = -1
-		public static int s_identity = 0;
+		public int s_identity = 0;
 		
 		/*
-		 * The 3d array s_rays will be created when a Space object is declared. The Space object
+		 * The array s_rays will be created when a Space object is declared. The Space object
 		 * iterates through every possible ray (using the lineSize as the limiting size) and
-		 * stores not the coordinates of other Space objects, but the index into the board
-		 * First dimension is index of the ray
-		 * Second dimension is the index of the space inside the ray
-		 * Third dimension is the space's coordinates
+		 * stores Ray objects
 		 */
-		public static int[][][] s_rays;
+		public Ray[] s_rays;
 		
 		// Weight is for the computer only, it stores how good it is to play into it.
-		public static double s_weight;
+		public double s_weight;
 		
 		// Space should not be constructed with no coordinates
 		Space () {
@@ -685,28 +697,27 @@ public class TicTacToe {
 		}
 		
 		// Constructor with just coords
-		Space (int[] coordinates){
+		Space (int[] coordinates) {
 			this(coordinates, 0, 0);
 		}
 		
 		// Constructor, rays gets created inside of Space
 		Space (int[] coordinates, int identity, double weight) {
 			// Initialize variables
-			s_coordinates = coordinates;
+			arrayCopier(s_coordinates, coordinates);
 			s_identity = identity;
 			s_weight = weight;
-	
+			
 			// Create the ray array
 			/*
 			 * The most amount of ray a space can be in is smaller than
 			 * 3^dimensions * lineSize - 1
 			 */
-			s_rays = new int[(int) (Math.pow(3 , dimensions)) * (lineSize - 1)][lineSize][dimensions];
+			s_rays = new Ray[(int) (Math.pow(3 , dimensions)) * (lineSize - 1)];
+			// Call the rayCreation method
+			int[] direction = new int[dimensions];
+			rayCreation(direction, 0);
 			
-			// Iterate through every ray, and if valid, add to s_rays
-			for (int i = 0; i < s_rays.length; i++) {
-				
-			}
 		}
 		/*
 		 * This method creates rays for the Space object. The direction array is the direction of the
@@ -714,7 +725,7 @@ public class TicTacToe {
 		 * recursionCounter increases each recursion.
 		 * rays is past to have the lowest layer input new rays
 		 */
-		public static void rayCreation (int[] direction, int recursionCounter) {
+		public void rayCreation (int[] direction, int recursionCounter) {
 			// Check if at the bottom of a recursion chain, if not, recurse with new direction
 			if (recursionCounter == direction.length) {
 				// Create new rays with the given direction and startingCoords
@@ -725,6 +736,7 @@ public class TicTacToe {
 					int[] tempCoords = new int[lineSize];
 					int[] tempDirection = new int[dimensions];
 					boolean validCoords = false;
+					boolean newRay = true;
 					arrayCopier(direction, tempDirection);
 					arrayInverter(tempDirection);
 					
@@ -745,33 +757,30 @@ public class TicTacToe {
 					if (!validCoords) {
 						continue;
 					}
-								
+					// Uninvert the direction
+					arrayInverter(tempDirection);
 					// Create the ray
 					Ray ray = new Ray(tempDirection, tempCoords);
 					
-					for (int j = 0; j < lineSize; j++) {
-						ray[j] = rayIncrementer(direction, tempCoords, j);
-					}
-					
-					// Check if the final set of coordinates in the ray are inside of the board
-					for (int j = 0; j < dimensions; j++) {
-						if (ray[lineSize][j] >= 0 && ray[lineSize][j] < boardSize) {
-							validCoords = true;
-						} else {
-							validCoords = false;
-							break;
-						}					
-					}
-					
 					// If the coordinates are invalid, check the next set
-					if (!validCoords) {
+					if (!ray.r_valid) {
 						continue;
 					}
 					
-					// Standardize the ray by sorting the coordinates from smallest to largest
-					
-					
 					// Add the ray into rays
+					
+					// Check if the ray is in rays already, if yes discard, if not add
+					
+					for (int j = 0; j < s_rays.length || newRay == false; j++) {
+						Ray tempRay = s_rays[j];
+						// Check if the indexes of the tempRay are blank, if yes then a new ray
+						if (ray.equals(tempRay)) {
+							break;
+						}
+						// Add the ray onto s_rays
+						s_rays[j] = ray;
+					
+					}
 					
 				}
 			} else {
@@ -788,32 +797,69 @@ public class TicTacToe {
 			}
 		}
 		
-		/*
-		 * This method returns a new set of coordinates using the given direction and starting coords.
-		 */
-		public static int[] rayIncrementer(int[] direction, int[] startingCoords, int amountOfIncrements) {
-			// Create a new set of coordinates
-			int[] newCoords = new int[dimensions];
-			arrayCopier(newCoords, startingCoords);
-			// Add the value of direction onto the coordinates
-			for (int i = 0; i < dimensions; i++) {
-				newCoords[i] += (direction[i] * amountOfIncrements);
-			}
-			// Return the new coordinates
-			return newCoords;
-		}
 	}
 	
-	static class Ray {
+	class Ray {
 		// Fields
 		
 		// The r_coordinates 2d array holds all the coords for the Spaces that are in the Ray
-		int[][] r_coordinates;
-		int[] r_direction;
-		int[] r_startingCoords;
+		public int[][] r_coordinates = new int[lineSize][dimensions];
+		
+		// The r_indexes array holds the indexes of the Space objects instead of the coordinates
+		public int[] r_indexes = new int[lineSize];
+		
+		// This boolean is true if the Ray fits into the board, false if not
+		public boolean r_valid;
+		
+		// Space should not be constructed with no coordinates
+		Ray () {
+			throw new IllegalStateException("Ray was initalized with no values!");
+		}
 		// Main Constructor
-		Ray(int[] direction, int[] startingCoords) {
+		Ray (int[] direction, int[] startingCoords) {
+			// Create the r_coordinates array 
+			for (int i = 0; i < lineSize; i++) {
+				arrayCopier(rayIncrementer(direction, startingCoords, i), r_coordinates[i]);
+			}
+			
+			/*
+			 * Check if the ray is valid, the only coords that need to be checked are the final ones,
+			 * as the first ones are checked upon creation
+			 */
+			for (int i = 0; i < dimensions; i++) {
+				if (r_coordinates[lineSize - 1][i] > boardSize || r_coordinates[lineSize - 1][i] < 0) {
+					r_valid = false;
+					break;
+				}
+			}
+			
+			// Sort the coordinates from smallest to largest
+			
+			// Convert the coordinates to indexes
+			for (int i = 0; i < r_coordinates.length; i++) {
+				r_indexes[i] = coordinateConverter(r_coordinates[i]);
+			}
+			
+			// Sort
+			for (int i = 0; i < r_coordinates.length - 1; i++) {
+				for (int j = i; j < r_coordinates.length - 1; j++) {
+					int tempValue;
+					int[] tempArray = new int[dimensions];
+					
+					if (r_indexes[j] > r_indexes[j + 1]) {
+						tempValue = r_indexes[j];
+						r_indexes[j] = r_indexes[j + 1];
+						r_indexes[j + 1] = tempValue;
+						
+						arrayCopier(r_coordinates[j], tempArray);
+						arrayCopier(r_coordinates[j], r_coordinates[j + 1]);
+						arrayCopier(tempArray, r_coordinates[j + 1]);
+					}
+				}
+			}
 			
 		}
+		
+
 	}
 }
