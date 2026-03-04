@@ -8,7 +8,11 @@ class Ray implements TicTacToeManager {
 		public int[] r_indexes;
 		
 		// This boolean is true if the Ray fits into the board, false if not
-		public boolean r_valid;			
+		public boolean r_valid;
+		
+		// These ints holds the weight of the Ray
+		public int r_weightX;
+		public int r_weightO;
 		
 		// Space should not be constructed with no coordinates
 		Ray () {
@@ -20,6 +24,10 @@ class Ray implements TicTacToeManager {
 			r_coordinates = new int[lineSize][dimensions];
 			
 			r_indexes = new int[lineSize];
+			
+			// Initialize weight
+			r_weightX = 1;
+			r_weightO = 1;
 			
 			// Create the r_coordinates array 
 			for (int i = 0; i < lineSize; i++) {

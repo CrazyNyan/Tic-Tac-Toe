@@ -1,4 +1,5 @@
 import java.util.Scanner;
+import java.util.ArrayList;
 
 public class TicTacToe implements TicTacToeManager {
 
@@ -9,9 +10,11 @@ public class TicTacToe implements TicTacToeManager {
 	private static int dimensions;
 	private static int boardSize;
 	
+	public static ArrayList<Space> board = new ArrayList<Space>();
+	
 	public static void main(String[] args) {
 		// Initialize variables and creating objects
-		int[][] board; // This array holds the gamestate in values of -1, 0, 1
+		//int[][] board; // This array holds the gamestate in values of -1, 0, 1
 		int[][] RCDBoard; // This array holds all of the possible rows, columns, and diagonals with the spaces in the second set of arrays
 		Scanner input = new Scanner(System.in);
 		boolean isFirstPlayer = true;
@@ -23,130 +26,50 @@ public class TicTacToe implements TicTacToeManager {
 		String firstPlayer;
 		String secondPlayer;
 		
-		// Prompt the user to set up the game and choose if there will be any computer players
-		do {
-			System.out.println("Please select the first player by typing either 'user' or 'computer'");
-			firstPlayer = input.next();
-			firstPlayer = firstPlayer.toLowerCase();
-			if (firstPlayer.charAt(0) == 'u' ||firstPlayer.charAt(0) == 'c') {
-				validInput = true;
-			}
-		} while (!validInput);
-		validInput = false;
-		do {
-			System.out.println("Please select the second player by typing either 'user' or 'computer'");
-			secondPlayer = input.next();
-			secondPlayer = secondPlayer.toLowerCase();
-			if (secondPlayer.charAt(0) == 'u' ||secondPlayer.charAt(0) == 'c') {
-				validInput = true;
-			}
-		} while (!validInput);
-		validInput = false;
+		// Prompt the user to set the size, dimension, and boardSize
+		System.out.println("Please enter the size of the board:");
+		boardSize = input.nextInt();
+		System.out.println("Please enter the lineSize:");
+		lineSize = input.nextInt();
+		System.out.println("Please enter the amount of dimensions:");
+		dimensions = input.nextInt();
 		
-		// Prompt the user to enter the size of the board, and create the board to that size
-		do {
-			System.out.println("Please enter the size of the board as a single integer, lowest is 3, highest is 999.");
-			System.out.println("Note: if a user is present in the game, size is capped at 25.");
-			userInput = input.nextInt();
-			if ((userInput >= 3 && userInput <= 999) &&
-					!(userInput > 25 && (firstPlayer.charAt(0) == 'u' || secondPlayer.charAt(0) == 'u'))) {
-				validInput = true;
-			} else {
-				validInput = false;
-			}
-		} while(!validInput);
+		// Fill the board
+		int[] coords = new int[dimensions];
 		
-		// Create the board based on the size the user input
-		board = new int[userInput][userInput];
-		boardSize = userInput;
-		// Set maxRecursions if the board is larger than specific values
-		switch (userInput) {
-			case 15, 14, 13, 12, 11, 10: maxRecursions = 1; break;
-			case 9, 8, 7: maxRecursions = 2; break;
-			case 6, 5: maxRecursions = 3; break;
-			case 4, 3: maxRecursions = 5; break;
-			default: maxRecursions = 0;
+		for (int i = 0; i < (int) (Math.pow(boardSize, dimensions)); i++) {
+			// Create the new Space object
+			Space space = new Space(coords, dimensions, lineSize, boardSize, board.size());
+			
+			// Add the Space object onto the arrayList
+			board.add(space);
+			
+			// Increment the coordinate array
+			coordinateIncrementer(coords, boardSize - 1, 0);
 		}
 		
-		// If the board is larger than 3, prompt the user to enter how large of a connection is required for a score
-		if (userInput > 3) {
-			validInput = false;
-			do {
-				System.out.println("Please enter the amout of spaces that need to be togeather for winning, default is 4, max is 10:");
-				userInput = input.nextInt();
-				if (userInput >= 3 && (userInput <= 10 && userInput <= boardSize)) {
-					validInput = true;
-				}
-			} while (!validInput);
+		System.out.println("Length of board: " + board.size());
+		
+		System.out.println("TEST ping of the edge");
+		board.get(0).updateIdentity(1);
+		System.out.println("Identity for 0, 0: " + board.get(0).s_identity);
+		System.out.println("Weights of all the spaces for X");
+		for (int i = 0; i < board.size(); i++) {
+			System.out.print(board.get(i).s_weightX + ", ");
 		}
-		lineSize = userInput;
-		// Declare the RCD board
-		RCDBoard = new int[RCDBoardSizer(boardSize)][lineSize * 2];
-		// Call the method to create the RCDBoard
-		RCDBoardGeneration(RCDBoard, boardSize);
-		
-		// This is the main loop, which cycles between players for moves
-		
-		// Declare a new Move object
-		Move move = new Move(0,0);
-		
-		do {
-			// Display the current board
-			if (boardSize < 16 || (firstPlayer.charAt(0) == 'u' || secondPlayer.charAt(0) == 'u')) {
-					displayBoard(board);
-			} else if (moves % 25 == 0) {
-					displayBoard(board);
-			}
-			// Execute the move, prompting the correct player
-			if (isFirstPlayer) {
-				// If firstPlayer is a user, prompt them and update board
-				if (firstPlayer.charAt(0) == 'u') {
-					System.out.println("This is the board state, please enter your move");
-					move = userMove(board, input);	
-					board[move.m_x][move.m_y] = 1;
-				} else {
-					// If firstPlayer is a computer, update board
-					if ((((boardSize * boardSize) - moves - 1)) < maxRecursions) {
-						 move = computerMove(board, RCDBoard, (boardSize * boardSize) - moves - 1, maxRecursions, true);
-					} else {		
-						 move = computerMove(board, RCDBoard, maxRecursions, maxRecursions, true);
-					}
-					board[move.m_x][move.m_y] = 1;
-				}
-				// Switch the player order
-				isFirstPlayer = false;
-			} else {
-				// If secondPlayer is a user, prompt them and update board
-				if (secondPlayer.charAt(0) == 'u') {
-					System.out.println("This is the board state, please enter your move");
-					move = userMove(board, input);		
-					board[move.m_x][move.m_y] = -1;
-				} else {	
-					// If secondPlayer is a computer, update board
-					if ((((boardSize * boardSize) - moves - 1)) < maxRecursions) {
-						 move = computerMove(board, RCDBoard, (boardSize * boardSize) - moves - 1, maxRecursions, false);
-					} else {		
-						 move = computerMove(board, RCDBoard, maxRecursions, maxRecursions, false);
-					}
-					
-					board[move.m_x][move.m_y] = -1;
-				}
-				// Switch the player order
-				isFirstPlayer = true;
-			}
-			// Increment the moves counter
-			moves++;
-		} while (!winCheck(board, RCDBoard) && moves != (boardSize * boardSize));
-		// Display results of the game
-		displayBoard(board);
-		if (winCheck(board, RCDBoard)) {
-			if (!isFirstPlayer) { // isFirstPlayer gets changed in the game loop, so the reverse must be used
-				System.out.printf("X has won the game, congradulations! The game took %d moves\n", moves);
-			} else {
-				System.out.printf("O has won the game, congradulations! The game took %d moves\n", moves);
-			}
-		} else {
-			System.out.println("The game is a tie, no one won :(");
+		System.out.println("\nWeights of all the spaces for O");
+		for (int i = 0; i < board.size(); i++) {
+			System.out.print(board.get(i).s_weightO + ", ");
+		}
+		board.get(4).updateIdentity(-1);
+		System.out.println("Identity for 1, 1: " + board.get(4).s_identity);
+		System.out.println("Weights of all the spaces for X");
+		for (int i = 0; i < board.size(); i++) {
+			System.out.print(board.get(i).s_weightX + ", ");
+		}
+		System.out.println("\nWeights of all the spaces for O");
+		for (int i = 0; i < board.size(); i++) {
+			System.out.print(board.get(i).s_weightO + ", ");
 		}
 	}
 	
@@ -600,7 +523,143 @@ public class TicTacToe implements TicTacToeManager {
 				}
 		}
 	
+	// This method increments an array, and if a value exceeds a threshold it increments the next index
+	public static void coordinateIncrementer(int[] array, int threshold, int index) {
+		array[index]++;
+		if (array[index] > threshold && index < array.length - 1) {
+			array[index] = 0;
+			coordinateIncrementer(array, threshold, index + 1);
+		}
+	}
 	
+	/*
+	 * OLD MAIN METHOD:: 
+	 * // Prompt the user to set up the game and choose if there will be any computer players
+		do {
+			System.out.println("Please select the first player by typing either 'user' or 'computer'");
+			firstPlayer = input.next();
+			firstPlayer = firstPlayer.toLowerCase();
+			if (firstPlayer.charAt(0) == 'u' ||firstPlayer.charAt(0) == 'c') {
+				validInput = true;
+			}
+		} while (!validInput);
+		validInput = false;
+		do {
+			System.out.println("Please select the second player by typing either 'user' or 'computer'");
+			secondPlayer = input.next();
+			secondPlayer = secondPlayer.toLowerCase();
+			if (secondPlayer.charAt(0) == 'u' ||secondPlayer.charAt(0) == 'c') {
+				validInput = true;
+			}
+		} while (!validInput);
+		validInput = false;
+		
+		// Prompt the user to enter the size of the board, and create the board to that size
+		do {
+			System.out.println("Please enter the size of the board as a single integer, lowest is 3, highest is 999.");
+			System.out.println("Note: if a user is present in the game, size is capped at 25.");
+			userInput = input.nextInt();
+			if ((userInput >= 3 && userInput <= 999) &&
+					!(userInput > 25 && (firstPlayer.charAt(0) == 'u' || secondPlayer.charAt(0) == 'u'))) {
+				validInput = true;
+			} else {
+				validInput = false;
+			}
+		} while(!validInput);
+		
+		// Create the board based on the size the user input
+		board = new int[userInput][userInput];
+		boardSize = userInput;
+		// Set maxRecursions if the board is larger than specific values
+		switch (userInput) {
+			case 15, 14, 13, 12, 11, 10: maxRecursions = 1; break;
+			case 9, 8, 7: maxRecursions = 2; break;
+			case 6, 5: maxRecursions = 3; break;
+			case 4, 3: maxRecursions = 5; break;
+			default: maxRecursions = 0;
+		}
+		
+		// If the board is larger than 3, prompt the user to enter how large of a connection is required for a score
+		if (userInput > 3) {
+			validInput = false;
+			do {
+				System.out.println("Please enter the amout of spaces that need to be togeather for winning, default is 4, max is 10:");
+				userInput = input.nextInt();
+				if (userInput >= 3 && (userInput <= 10 && userInput <= boardSize)) {
+					validInput = true;
+				}
+			} while (!validInput);
+		}
+		lineSize = userInput;
+		// Declare the RCD board
+		RCDBoard = new int[RCDBoardSizer(boardSize)][lineSize * 2];
+		// Call the method to create the RCDBoard
+		RCDBoardGeneration(RCDBoard, boardSize);
+		
+		// This is the main loop, which cycles between players for moves
+		
+		// Declare a new Move object
+		Move move = new Move(0,0);
+		
+		do {
+			// Display the current board
+			if (boardSize < 16 || (firstPlayer.charAt(0) == 'u' || secondPlayer.charAt(0) == 'u')) {
+					displayBoard(board);
+			} else if (moves % 25 == 0) {
+					displayBoard(board);
+			}
+			// Execute the move, prompting the correct player
+			if (isFirstPlayer) {
+				// If firstPlayer is a user, prompt them and update board
+				if (firstPlayer.charAt(0) == 'u') {
+					System.out.println("This is the board state, please enter your move");
+					move = userMove(board, input);	
+					board[move.m_x][move.m_y] = 1;
+				} else {
+					// If firstPlayer is a computer, update board
+					if ((((boardSize * boardSize) - moves - 1)) < maxRecursions) {
+						 move = computerMove(board, RCDBoard, (boardSize * boardSize) - moves - 1, maxRecursions, true);
+					} else {		
+						 move = computerMove(board, RCDBoard, maxRecursions, maxRecursions, true);
+					}
+					board[move.m_x][move.m_y] = 1;
+				}
+				// Switch the player order
+				isFirstPlayer = false;
+			} else {
+				// If secondPlayer is a user, prompt them and update board
+				if (secondPlayer.charAt(0) == 'u') {
+					System.out.println("This is the board state, please enter your move");
+					move = userMove(board, input);		
+					board[move.m_x][move.m_y] = -1;
+				} else {	
+					// If secondPlayer is a computer, update board
+					if ((((boardSize * boardSize) - moves - 1)) < maxRecursions) {
+						 move = computerMove(board, RCDBoard, (boardSize * boardSize) - moves - 1, maxRecursions, false);
+					} else {		
+						 move = computerMove(board, RCDBoard, maxRecursions, maxRecursions, false);
+					}
+					
+					board[move.m_x][move.m_y] = -1;
+				}
+				// Switch the player order
+				isFirstPlayer = true;
+			}
+			// Increment the moves counter
+			moves++;
+		} while (!winCheck(board, RCDBoard) && moves != (boardSize * boardSize));
+		// Display results of the game
+		displayBoard(board);
+		if (winCheck(board, RCDBoard)) {
+			if (!isFirstPlayer) { // isFirstPlayer gets changed in the game loop, so the reverse must be used
+				System.out.printf("X has won the game, congradulations! The game took %d moves\n", moves);
+			} else {
+				System.out.printf("O has won the game, congradulations! The game took %d moves\n", moves);
+			}
+		} else {
+			System.out.println("The game is a tie, no one won :(");
+		}
+	 */
 	
 	
 	
