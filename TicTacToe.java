@@ -103,6 +103,8 @@ public class TicTacToe implements TicTacToeManager {
 			coordinateIncrementer(coords, boardSize - 1, 0);
 		}
 		
+		System.out.println("Game start!");
+		
 		do {
 			// Display the current board
 			if (dimensions <= 3) {
@@ -135,6 +137,11 @@ public class TicTacToe implements TicTacToeManager {
 				}
 				// Switch the player order
 				isFirstPlayer = true;
+			}
+			
+			if (pauseInbetweenMoves) {
+				System.out.println("Paused, press anything to perform next move: ");
+				input.next();
 			}
 			// Increment the moves counter
 			moves++;
