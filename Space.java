@@ -32,9 +32,6 @@ class Space extends TicTacToe implements TicTacToeManager {
 		// This field holds the size of the board
 		public int s_boardSize;
 		
-		// This field is true if a win has been detected, and is false if no win is detected
-		public boolean s_isWin;
-		
 		// This field contains the index of the Space
 		public int s_index;
 		// Space should not be constructed with no coordinates
@@ -67,11 +64,6 @@ class Space extends TicTacToe implements TicTacToeManager {
 			s_weightX = s_rays.size();
 			s_weightO = s_rays.size();
 			
-			System.out.println("Im a new space object with these coordinates: ");
-			for (int i = 0; i < coordinates.length; i++) {
-				System.out.print(coordinates[i] + ", ");
-			}
-			System.out.println("\n and: " + s_rays.size() + " Rays");
 		}
 		/*
 		 * This method creates rays for the Space object. The direction array is the direction of the
@@ -171,8 +163,12 @@ class Space extends TicTacToe implements TicTacToeManager {
 		
 		// This method updates the identity of the Space, the X0_ value, and calls updateWeight
 		public void updateIdentity(int newIdentity) {
+			if (s_identity == 0) {
 			s_identity = newIdentity;
 			updateWeight(true, s_index);
+			} else {
+				throw new IllegalStateException("SPACE WAS CHANGED WITH A VALUE ALREADY IN IT");
+			}
 		}
 		
 		public void updateWeight(boolean pingToUpdate, int indexOfChange) {
@@ -207,13 +203,7 @@ class Space extends TicTacToe implements TicTacToeManager {
 					}
 				}
 
-			} else if (s_identity == 0){
-			
-				System.out.println("I have been pinged! My coords are: ");
-				for (int i = 0; i < s_coordinates.length; i++) {
-					System.out.print(s_coordinates[i] + ", ");
-				}
-				System.out.println();
+			} else {
 				// Updating the weight
 			
 				// Iterate
@@ -251,6 +241,9 @@ class Space extends TicTacToe implements TicTacToeManager {
 								hasO = true;
 							}
 						}
+						if (placeValue == s_lineSize || placeValue == (s_lineSize * -1)) {
+							winDetected = true;
+						}
 						// Run the weight calculation and add the result into the Ray
 						currRay.r_weightX = weightCalc(placeValue, hasX, hasO);
 						currRay.r_weightO = weightCalc(placeValue * -1, hasO, hasX);
@@ -265,7 +258,8 @@ class Space extends TicTacToe implements TicTacToeManager {
 					s_weightX += s_rays.get(i).r_weightX;
 					s_weightO += s_rays.get(i).r_weightO;
 				}
-			} else {
+			} 
+			if (s_identity != 0) {
 				s_weightX = -1;
 				s_weightO = -1;
 			}
